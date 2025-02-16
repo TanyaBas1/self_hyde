@@ -60,11 +60,10 @@ def main():
     # generate final response
     logger.info("Generating final response...")
     final_prompt = f"""Based on the retrieved documents, please provide a comprehensive answer to the question: {query}
+                    Retrieved information:
+                    {' '.join(documents[hit.docid] for hit in hits)}
 
-Retrieved information:
-{' '.join(documents[hit.docid] for hit in hits)}
-
-Please provide a clear and concise answer:"""
+                    Please provide a clear and concise answer:"""
     
     final_response = generator.generate(final_prompt)[0]
     print_section("Final Answer", final_response)

@@ -21,6 +21,7 @@ bs4 = "^0.0.2"
 rich = "^13.9.4"
 ir-datasets = "^0.5.9"
 datasets = "^3.3.0"
+rouge-score = "^0.1.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
