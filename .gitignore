@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.egg-info/
+*.pyc
+.pytest_cache/
+
+.venv/
+dist/
+build/
+.coverage
+htmlcov/
+
+poetry.lock

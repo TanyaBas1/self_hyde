@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "self_hyde"
+version = "0.1.0"
+description = "hypothetical document embeddings"
+authors = ["Tetiana Bas <tetianabass17@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "hyde", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^1.12.0"  # For OpenAI API
+numpy = "^1.26.0"   # For array operations in hyde.py
+sentence-transformers = "^2.5.0"  # We'll use this instead of pyserini for embeddings
+torch = "^2.2.0"    # Required by sentence-transformers
+faiss-cpu = "^1.7.2"
+python-dotenv = "^1.0.0"
+wikipedia = "^1.4.0"
+bs4 = "^0.0.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "setuptools>=45.0"]
+build-backend = "poetry.core.masonry.api"
