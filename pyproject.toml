@@ -19,6 +19,8 @@ python-dotenv = "^1.0.0"
 wikipedia = "^1.4.0"
 bs4 = "^0.0.2"
 rich = "^13.9.4"
+ir-datasets = "^0.5.9"
+datasets = "^3.3.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"

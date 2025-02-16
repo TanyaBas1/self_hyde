@@ -11,3 +11,5 @@ build/
 htmlcov/
 
 poetry.lock
+marie_curie_corpus.json
+new_york_corpus.json

@@ -20,12 +20,11 @@ logger = logging.getLogger("hyde-demo")
 console = Console()
 
 def print_section(title, content):
-    """Helper function to print content in a nice panel"""
     rprint(Panel(str(content), title=title, border_style="cyan"))
 
 def main():
     logger.info("Loading document corpus...")
-    with open('marie_curie_corpus.json', 'r', encoding='utf-8') as f:
+    with open('new_york_corpus.json', 'r', encoding='utf-8') as f:
         documents = json.load(f)
     
     # initialize components 
@@ -35,7 +34,7 @@ def main():
     searcher = Searcher(documents)
     hyde = HyDE(promptor, generator, encoder, searcher)
 
-    query = "Why did Marie Curie die and what was the cause of her death?"
+    query = "When New York was the capital of the US?"
     print_section("Query", query)
     
     prompt = hyde.prompt(query)
@@ -50,7 +49,7 @@ def main():
     # encode and search
     logger.info("Performing semantic search...")
     hyde_vector = hyde.encode(query, hypothesis_documents)
-    hits = hyde.search(hyde_vector, k=3)
+    hits = hyde.search(hyde_vector, k=5)
     
     # show retrieved documents (based on hypothesis documents )
     console.print("\n[bold cyan]Top Retrieved Documents:[/bold cyan]")
@@ -71,6 +70,6 @@ Please provide a clear and concise answer:"""
     print_section("Final Answer", final_response)
 
 if __name__ == "__main__":
-    console.print("\n[bold magenta]🔬 HyDE Demo - Marie Curie Query[/bold magenta]\n")
+    console.print("\n[bold magenta] HyDE Demo - New York Query[/bold magenta]\n")
     main()
     
