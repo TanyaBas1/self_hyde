@@ -1,8 +1,8 @@
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-
 import numpy as np
+import faiss
 from sentence_transformers import SentenceTransformer
 
 class Encoder:
@@ -21,18 +21,29 @@ class Searcher:
         self.encoder = Encoder()
         self.doc_ids = list(documents.keys())
         self.doc_embeddings = self._encode_documents()
+        self.index = self._build_index()
     
     def _encode_documents(self):
         texts = [self.documents[doc_id] for doc_id in self.doc_ids]
-        return self.encoder.encode(texts)
+        embeddings = self.encoder.encode(texts)
+        return embeddings.astype('float32')  
+    
+    def _build_index(self):
+        dimension = self.doc_embeddings.shape[1]
+        # inner product similarity
+        index = faiss.IndexFlatIP(dimension)  
+        index.add(self.doc_embeddings)
+        return index
     
     def search(self, query_vector, k=10):
-        similarities = np.dot(self.doc_embeddings, query_vector.T).squeeze()
-        top_k_idx = np.argsort(similarities)[-k:][::-1]
+        query_vector = query_vector.astype('float32').reshape(1, -1)
+        similarities, indices = self.index.search(query_vector, k)
         
         class Hit:
-            def __init__(self, docid):
+            def __init__(self, docid, score):
                 self.docid = docid
+                self.score = score
         
-        hits = [Hit(self.doc_ids[idx]) for idx in top_k_idx]
+        hits = [Hit(self.doc_ids[idx], float(score)) 
+                for idx, score in zip(indices[0], similarities[0])]
         return hits 
