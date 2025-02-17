@@ -1,6 +1,8 @@
 import pytest
 import numpy as np
-from hyde.hyde import HyDE
+from hyde.hyde import HyDE, SelfRAGHyDE
+from hyde.segment_scorer import ReflectionTokens
+
 
 class MockPromptor:
     def build_prompt(self, query):
@@ -8,11 +10,33 @@ class MockPromptor:
 
 class MockGenerator:
     def generate(self, prompt):
-        # return predictable "hypothetical documents" for testing
+        # return predictable hypothetical documents for testing
         return [
             "The Empire State Building, completed in 1931, stands 1,454 feet tall in Manhattan.",
             "New York City consists of five boroughs: Manhattan, Brooklyn, Queens, The Bronx, and Staten Island."
         ]
+    
+    def generate_retrieval_decision(self, prompt):
+        # Return RETRIEVE for factual questions about NYC, NO_RETRIEVE for opinion questions
+        if any(word in prompt.lower() for word in ['nyc', 'new york', 'manhattan', 'empire']):
+            return ReflectionTokens.RETRIEVE
+        return ReflectionTokens.NO_RETRIEVE
+    
+    def generate_with_reflection(self, prompt, retrieved_docs=None):
+        # Mock reflection generation
+        if retrieved_docs:
+            response = "Here's information about NYC based on retrieved documents."
+            critique = {
+                'relevance': ReflectionTokens.RELEVANT,
+                'support': ReflectionTokens.SUPPORTED
+            }
+        else:
+            response = "This is a subjective response without retrieval."
+            critique = {
+                'relevance': ReflectionTokens.NO_RETRIEVE,
+                'support': ReflectionTokens.NO_RETRIEVE
+            }
+        return response, critique
 
 class MockEncoder:
     def encode(self, text):
@@ -27,6 +51,11 @@ class MockEncoder:
 class MockSearcher:
     def __init__(self):
         self.last_vector = None
+
+        self.documents = {
+            "doc1": "The 1735 trial and acquittal in Manhattan of John Peter Zenger, who had been accused of seditious libel after criticizing colonial governor William Cosby, helped to establish freedom of the press in North America.",,
+            "doc2":  "Designed by Frederick Law Olmsted and Calvert Vaux, Central Park opened in 1876 and is the most visited urban park in the United States.",
+        }
         
     def search(self, vector, k=10):
         self.last_vector = vector
@@ -45,6 +74,15 @@ class MockSearcher:
 @pytest.fixture
 def hyde_instance():
     return HyDE(
+        promptor=MockPromptor(),
+        generator=MockGenerator(),
+        encoder=MockEncoder(),
+        searcher=MockSearcher()
+    )
+
+@pytest.fixture
+def selfrag_hyde_instance():
+    return SelfRAGHyDE(
         promptor=MockPromptor(),
         generator=MockGenerator(),
         encoder=MockEncoder(),
@@ -136,3 +174,45 @@ def test_vector_consistency(hyde_instance):
     )
     
     assert np.array_equal(vector1, vector2) 
+
+def test_selfrag_hyde_no_retrieval_path(selfrag_hyde_instance):
+    """Test the no-retrieval decision path"""
+    query = "What's your opinion on AI?"
+    response, critique, hits = selfrag_hyde_instance.e2e_search(query)
+    
+    assert isinstance(response, str)
+    assert isinstance(critique, dict)
+    assert hits == []  # No hits when retrieval is skipped
+
+def test_selfrag_hyde_retrieval_path(selfrag_hyde_instance):
+    """Test the retrieval decision path"""
+    query = "Tell me about the Empire State Building"
+    response, critique, hits = selfrag_hyde_instance.e2e_search(query)
+    
+    assert isinstance(response, str)
+    assert isinstance(critique, dict)
+    assert len(hits) > 0  # Should have hits when retrieval is used
+    assert all(hasattr(hit, 'docid') for hit in hits)
+    assert all(hasattr(hit, 'score') for hit in hits)
+
+def test_selfrag_hyde_intermediate_results(selfrag_hyde_instance):
+    """Test the intermediate results functionality"""
+    query = "What are NYC's landmarks?"
+    results = selfrag_hyde_instance.get_intermediate_results(query)
+    
+    # Check all intermediate steps are present
+    assert 'prompt' in results
+    assert 'hypothesis_documents' in results
+    assert 'hyde_vector' in results
+    assert 'hits' in results
+    assert 'final_response' in results
+    assert 'critique' in results
+    
+    # Verify types
+    assert isinstance(results['prompt'], str)
+    assert isinstance(results['hypothesis_documents'], list)
+    if results['hyde_vector'] is not None:
+        assert isinstance(results['hyde_vector'], np.ndarray)
+    assert isinstance(results['hits'], list)
+    assert isinstance(results['final_response'], str)
+    assert isinstance(results['critique'], dict) 

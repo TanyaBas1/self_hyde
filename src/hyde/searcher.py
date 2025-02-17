@@ -17,6 +17,9 @@ class Searcher:
         """
         documents: dict of {doc_id: text}
         """
+        if not documents:
+            raise ValueError("Documents dictionary cannot be empty")
+            
         self.documents = documents
         self.encoder = Encoder()
         self.doc_ids = list(documents.keys())

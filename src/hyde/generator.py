@@ -1,6 +1,6 @@
 import time
 import openai
-from src.hyde.segment_scorer import SegmentScorer, ReflectionTokens
+from hyde.segment_scorer import SegmentScorer, ReflectionTokens
 
 class Generator:
     def __init__(self, model_name, api_key):
