@@ -53,13 +53,13 @@ The index corpus for retrieval was build by scraping wikipedia. You can re creat
 python create_corpus.py
 ```
 
-Alternatively I pushed the json with scraped data to the repo (new_york_corpus.json).
+Alternatively I pushed the json with scraped data to the repo (`new_york_corpus.json`).
 
 ## Demos
 
 Repo has 2 demos: 
-1. HyDE demo (adapted original HyDE paper): demo_hyde.py
-2. Self-HyDE demo (extended Hyde with Self RAG framwork from SelfRAG paper): demo_self_hyde.py
+1. HyDE demo (adapted original HyDE paper): `demo_hyde.py`
+2. Self-HyDE demo (extended Hyde with Self RAG framwork from SelfRAG paper): `demo_self_hyde.py`
 Self-HyDE demo shows both step-by-step and end-to-end execution which should be helpful for understanding the system
 
 ## Testing
@@ -72,14 +72,17 @@ pytest tests/
 ## Evaluation
 
 There are 2 evaluation files:
-1. evals_hyde.py - evaluation of my adaptation of HyDE paper
-2. evals_self_hyde.py - evaluation of Self-HyDE (Self Rag concepts built on top of my version of HyDE)
+1. `evals_hyde.py` - evaluation of my adaptation of HyDE paper
+2. `evals_self_hyde.py` - evaluation of Self-HyDE (Self Rag concepts built on top of my version of HyDE)
+
+I also pushed the initial evalaution results in `nyc_rag_evaluation_results.json` file
 
 ## Next Steps
 
-1. build larger index/use msmarco index and test on a larger with a broader range of topics and questions
-2. improve evaluation by setting up more comprehensive evalaution of the LLM judges (relevance/support scores). 
-3. work on decreased latency by implementing batching and parallelization 
+1. Build larger index/use msmarco index and test on a larger with a broader range of topics and questions
+2. Improve evaluation by setting up more comprehensive evalaution of the LLM judges (relevance/support scores). 
+3. Work on decreased latency by implementing batching and parallelization 
+4. Do method iteration to increase percentage improvement of Self HyDE and adapted HyDE over baseline. 
 
 ## References
 
