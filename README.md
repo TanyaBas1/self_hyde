@@ -17,6 +17,8 @@ This implementation is built upon the intersection of two RAG enhancement techni
 1. **HyDE**: Uses language models to generate hypothetical documents for better retrieval
 2. **SelfRAG**: Adds self-reflection to decide when to retrieve passages and critique passages retrived absed on thir relevance and suport in answering the query.  
 
+![Approach Overview](SelfHyDE_high_level_illustration.png)
+
 ## Set up
 
 First, you have to crate env file and add your OpenAI API key to it.
