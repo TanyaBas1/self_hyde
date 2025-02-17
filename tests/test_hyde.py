@@ -53,8 +53,9 @@ class MockSearcher:
         self.last_vector = None
 
         self.documents = {
-            "doc1": "The 1735 trial and acquittal in Manhattan of John Peter Zenger, who had been accused of seditious libel after criticizing colonial governor William Cosby, helped to establish freedom of the press in North America.",,
+            "doc1": "The 1735 trial and acquittal in Manhattan of John Peter Zenger, who had been accused of seditious libel after criticizing colonial governor William Cosby, helped to establish freedom of the press in North America.",
             "doc2":  "Designed by Frederick Law Olmsted and Calvert Vaux, Central Park opened in 1876 and is the most visited urban park in the United States.",
+            "doc3": "New York City's population exceeded 8 million for the first time in the 2000 census; further records were set in the 2010 and 2020 censuses. Important new economic sectors, such as Silicon Alley, emerged."
         }
         
     def search(self, vector, k=10):
