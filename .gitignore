@@ -13,3 +13,4 @@ htmlcov/
 poetry.lock
 marie_curie_corpus.json
 new_york_corpus.json
+nyc_rag_evaluation_results.json

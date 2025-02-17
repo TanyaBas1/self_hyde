@@ -87,72 +87,7 @@ class RAGEvaluator:
         rouge_scores['answer_relevance'] = relevance_score
         return rouge_scores
 
-    def compare_approaches(
-        self,
-        vanilla_retriever: VanillaRetriever,
-        hyde_retriever: HyDERetriever,
-        generator,
-        eval_dataset,
-        num_samples: int = None
-    ) -> Dict[str, Dict[str, float]]:
-        """Compare HyDE and vanilla approaches"""
-        self.logger.info(f"Starting comparison with {num_samples or 'all'} samples")
-        
-        metrics = {
-            'hyde': defaultdict(list),
-            'vanilla': defaultdict(list)
-        }
-        
-        eval_data = eval_dataset['validation']
-        if num_samples:
-            indices = np.random.choice(len(eval_data), num_samples, replace=False)
-            eval_data = [eval_data[i] for i in indices]
-        
-        for sample in tqdm(eval_data, desc="Evaluating samples"):
-            query = sample['question']
-            
-            for approach, retriever in [
-                ('vanilla', vanilla_retriever),
-                ('hyde', hyde_retriever)
-            ]:
-                try:
-                    # Measure retrieval time
-                    start_time = time.time()
-                    retrieved_docs = retriever.retrieve(query)
-                    retrieval_time = time.time() - start_time
-                    
-                    # Generate final answer
-                    final_prompt = f"""Based on the retrieved documents, answer the question: {query}
-                    Retrieved information: {' '.join(retrieved_docs)}
-                    Please provide a clear and concise answer:"""
-                    
-                    predicted_answer = generator.generate(final_prompt)[0]
-                    
-                    # Evaluate retrieval and answer
-                    retrieval_metrics = self.evaluate_retrieval(retrieved_docs, sample['context'])
-                    answer_metrics = self.evaluate_answer(predicted_answer, sample['answers']['text'])
-                    
-                    # Store metrics
-                    metrics[approach]['retrieval_time'].append(retrieval_time)
-                    for k, v in {**retrieval_metrics, **answer_metrics}.items():
-                        metrics[approach][k].append(v)
-                        
-                except Exception as e:
-                    self.logger.error(f"Error evaluating {approach} approach: {str(e)}")
-                    # Add zero values for failed evaluations
-                    metrics[approach]['retrieval_time'].append(0.0)
-                    for metric in ['retrieval_rouge1', 'retrieval_rouge2', 'retrieval_rougeL',
-                                 'answer_rouge1', 'answer_rouge2', 'answer_rougeL', 'answer_relevance']:
-                        metrics[approach][metric].append(0.0)
-        
-        # Calculate average metrics
-        results = {
-            approach: {k: np.mean(v) for k, v in approach_metrics.items()}
-            for approach, approach_metrics in metrics.items()
-        }
-        
-        self.logger.info("Evaluation completed successfully")
-        return results
+    
 
 def print_comparative_results(results: Dict[str, Dict[str, float]]):
     """Pretty print comparative evaluation results"""
@@ -190,7 +125,7 @@ def main():
     logger = logging.getLogger(__name__)
     
     # the size of NYC subset of the eval dataset is 817, testing on 100 to speed up iteration 
-    NUM_EXAMPLES = 100
+    NUM_EXAMPLES = 10
     logger.info(f"Starting NYC-specific RAG evaluation with {NUM_EXAMPLES} examples...")
     
     # Load dataset and filter for NYC
