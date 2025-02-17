@@ -1,0 +1,40 @@
+{
+  "results": {
+    "vanilla": {
+      "retrieval_rouge1": 0.3085948459236132,
+      "retrieval_rouge2": 0.29399263655704805,
+      "retrieval_rougeL": 0.3058747551021122,
+      "answer_rougerouge1": 0.24237022470008696,
+      "answer_rougerouge2": 0.12240750942654383,
+      "answer_rougerougeL": 0.24237022470008696,
+      "answer_relevance": 0.6732864753971808
+    },
+    "hyde": {
+      "retrieval_rouge1": 0.3141285951950152,
+      "retrieval_rouge2": 0.3007371914248611,
+      "retrieval_rougeL": 0.31149760628064155,
+      "answer_rougerouge1": 0.23756499029651798,
+      "answer_rougerouge2": 0.12262777751925436,
+      "answer_rougerougeL": 0.23756499029651798,
+      "answer_relevance": 0.7088087984139565
+    },
+    "selfrag_hyde": {
+      "retrieval_rouge1": 0.2962000182155507,
+      "retrieval_rouge2": 0.2811314222986625,
+      "retrieval_rougeL": 0.2933859430412614,
+      "answer_rougerouge1": 0.2484476296256083,
+      "answer_rougerouge2": 0.12631389969152879,
+      "answer_rougerougeL": 0.24744762962560826,
+      "answer_relevance": 0.692479994680034
+    }
+  },
+  "metadata": {
+    "dataset": "squad-nyc",
+    "num_examples": 100,
+    "timestamp": "2025-02-16T16:57:46.979203",
+    "model_info": {
+      "generator": "gpt-3.5-turbo",
+      "relevance_model": "cross-encoder/qnli-electra-base"
+    }
+  }
+}
