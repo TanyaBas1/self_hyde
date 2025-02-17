@@ -1,5 +1,6 @@
 import time
 import openai
+from src.hyde.segment_scorer import SegmentScorer, ReflectionTokens
 
 class Generator:
     def __init__(self, model_name, api_key):
@@ -63,3 +64,74 @@ class OpenAIGenerator(Generator):
                     raise e
         return self.parse_response(result)
 
+
+class SelfRAGGenerator:
+    def __init__(self, model_name, api_key, n_segments=3, base_url=None):
+        self.model_name = model_name
+        self.n_segments = n_segments
+        self.scorer = SegmentScorer()
+        self.client = openai.OpenAI(base_url=base_url, api_key=api_key)
+
+    def generate(self, prompt):
+        result = self.client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model=self.model_name,
+                max_tokens=512,
+                temperature=0.3,
+                n=1)
+        return [choice.message.content for choice in result.choices]
+
+    def generate_with_reflection(self, prompt, retrieved_docs=None):
+        # check if we need rag to asnwer this quesiton
+        retrieval_decision = self.generate_retrieval_decision(prompt)
+        
+        if retrieval_decision == ReflectionTokens.NO_RETRIEVE:
+            response = self.generate(prompt)[0]
+            critique = self.generate_critique(response, retrieval_used = False)
+            return response, critique
+
+        segments = []
+        critiques = []
+        
+        for i in range(self.n_segments):
+            segment = self.generate(prompt)[0]
+            critique = self.generate_critique(segment, retrieved_docs[i] if retrieved_docs else None)
+            segments.append(segment)
+            critiques.append(critique)
+        
+        scores = [self.scorer.score_segment(seg, crit) for seg, crit in zip(segments, critiques)]
+        best_idx = max(range(len(scores)), key=lambda i: scores[i])
+        
+        return segments[best_idx], critiques[best_idx]
+
+    def generate_retrieval_decision(self, prompt):
+        decision_prompt = f"""
+        Should I retrieve external information for the following prompt: {prompt}\n.
+        Respond {ReflectionTokens.RETRIEVE} if the prompt involves general knowledge or requests factual information.
+        Respond {ReflectionTokens.NO_RETRIEVE} if the prompt seeks subjective opinions or creative input
+        """
+        decision = self.generate(decision_prompt)[0].strip()
+        return decision
+
+    def generate_critique(self, segment, reference_doc=None, retrieval_used=True):
+
+        if not retrieval_used:
+            return {
+                'relevance': ReflectionTokens.NO_RETRIEVE,
+                'support': ReflectionTokens.NO_RETRIEVE
+            }
+        else:
+            critique_prompt = f"""
+            Evaluate the following text and provide your assessment for relevance and support:\n{segment}
+            if you are 70% confident that the document is relevat say 'relevant', othervise say 'irrelevant'
+            if you are 70% confident that docuemnt supports the question say 'supported' otherwise say 'contradicts'
+            """
+            if reference_doc:
+                critique_prompt += f"\n here are the reference documents:\n{reference_doc}"
+                
+            critique_response = self.generate(critique_prompt)[0].lower()
+            
+            return {
+                'relevance': ReflectionTokens.RELEVANT if "relevant" in critique_response else ReflectionTokens.IRRELEVANT,
+                'support': ReflectionTokens.SUPPORTED if "supported" in critique_response else ReflectionTokens.PARTIALLY
+            }

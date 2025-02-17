@@ -10,8 +10,8 @@ class MockGenerator:
     def generate(self, prompt):
         # return predictable "hypothetical documents" for testing
         return [
-            "Marie Curie discovered radium and polonium through her groundbreaking research.",
-            "The Nobel Prize winner conducted extensive studies on radioactivity."
+            "The Empire State Building, completed in 1931, stands 1,454 feet tall in Manhattan.",
+            "New York City consists of five boroughs: Manhattan, Brooklyn, Queens, The Bronx, and Staten Island."
         ]
 
 class MockEncoder:
@@ -58,19 +58,19 @@ def test_hyde_initialization(hyde_instance):
     assert isinstance(hyde_instance.searcher, MockSearcher)
 
 def test_prompt_generation(hyde_instance):
-    query = "Tell me about Marie Curie's discoveries"
+    query = "Tell me about New York City's landmarks"
     prompt = hyde_instance.prompt(query)
     assert isinstance(prompt, str)
-    assert "Marie Curie's discoveries" in prompt
+    assert "New York City's landmarks" in prompt
 
 def test_document_generation(hyde_instance):
-    query = "What did Marie Curie discover?"
+    query = "What are the main features of NYC?"
     docs = hyde_instance.generate(query)
     
     assert isinstance(docs, list)
     assert len(docs) == 2
-    assert any("radium" in doc.lower() for doc in docs)
-    assert any("polonium" in doc.lower() for doc in docs)
+    assert any("empire state" in doc.lower() for doc in docs)
+    assert any("boroughs" in doc.lower() for doc in docs)
 
 def test_encoding(hyde_instance):
     query = "Test query"
@@ -95,7 +95,7 @@ def test_search(hyde_instance):
     assert hits[0].score > hits[1].score  # check order
 
 def test_e2e_search(hyde_instance):
-    query = "What were Marie Curie's major discoveries?"
+    query = "What are the major landmarks in New York City?"
     hits = hyde_instance.e2e_search(query, k=3)
 
     assert len(hits) == 3
@@ -114,16 +114,16 @@ def test_edge_cases(hyde_instance):
     assert len(hits) == 1
     
     # k=1
-    hits = hyde_instance.e2e_search("Marie Curie", k=1)
+    hits = hyde_instance.e2e_search("New York City", k=1)
     assert len(hits) == 1
     
     # large k
-    hits = hyde_instance.e2e_search("Marie Curie", k=100)
+    hits = hyde_instance.e2e_search("New York City", k=100)
     assert len(hits) == 3  # expected to return all available mock hits
 
 def test_vector_consistency(hyde_instance):
     # check if the same query produces consistent vectors
-    query = "Marie Curie radioactivity"
+    query = "New York City landmarks"
     
     vector1 = hyde_instance.encode(
         query, 
