@@ -6,6 +6,7 @@ import faiss
 from sentence_transformers import SentenceTransformer
 
 class Encoder:
+    """Encode text into a vector."""
     def __init__(self, model_name='sentence-transformers/all-MiniLM-L6-v2'):
         self.model = SentenceTransformer(model_name)
     
@@ -13,6 +14,7 @@ class Encoder:
         return self.model.encode(text)
 
 class Searcher:
+    """Search for the most relevant documents."""
     def __init__(self, documents):
         """
         documents: dict of {doc_id: text}
@@ -27,11 +29,13 @@ class Searcher:
         self.index = self._build_index()
     
     def _encode_documents(self):
+        """Encode documents into a vector."""
         texts = [self.documents[doc_id] for doc_id in self.doc_ids]
         embeddings = self.encoder.encode(texts)
         return embeddings.astype('float32')  
     
     def _build_index(self):
+        """Build an index for the documents."""
         dimension = self.doc_embeddings.shape[1]
         # inner product similarity
         index = faiss.IndexFlatIP(dimension)  
@@ -39,6 +43,7 @@ class Searcher:
         return index
     
     def search(self, query_vector, k=10):
+        """Search for the most relevant documents."""
         query_vector = query_vector.astype('float32').reshape(1, -1)
         similarities, indices = self.index.search(query_vector, k)
         

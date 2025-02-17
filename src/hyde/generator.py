@@ -29,6 +29,7 @@ class OpenAIGenerator(Generator):
         self._client_init()
     
     def _client_init(self):
+        """Initialize the OpenAI client."""
         self.client = openai.OpenAI(
             base_url=self.base_url,
             api_key=self.api_key,
@@ -42,6 +43,7 @@ class OpenAIGenerator(Generator):
         return texts
     
     def generate(self, prompt):
+        """Generate text using the OpenAI API."""
         get_results = False
         while not get_results:
             try:
@@ -73,6 +75,7 @@ class SelfRAGGenerator:
         self.client = openai.OpenAI(base_url=base_url, api_key=api_key)
 
     def generate(self, prompt):
+        """Generate text using the Self RAG framework."""
         result = self.client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model=self.model_name,
@@ -82,6 +85,8 @@ class SelfRAGGenerator:
         return [choice.message.content for choice in result.choices]
 
     def generate_with_reflection(self, prompt, retrieved_docs=None):
+        """Decide if retrival is needed. If yes, use LLM critique to rerank the segments.
+        """
         # check if we need rag to asnwer this quesiton
         retrieval_decision = self.generate_retrieval_decision(prompt)
         
@@ -105,6 +110,7 @@ class SelfRAGGenerator:
         return segments[best_idx], critiques[best_idx]
 
     def generate_retrieval_decision(self, prompt):
+        """Generate decision if retrival is needed."""
         decision_prompt = f"""
         Should I retrieve external information for the following prompt: {prompt}\n.
         Respond {ReflectionTokens.RETRIEVE} if the prompt involves general knowledge or requests factual information.
@@ -114,7 +120,7 @@ class SelfRAGGenerator:
         return decision
 
     def generate_critique(self, segment, reference_doc=None, retrieval_used=True):
-
+        """Critique generation step: classify the segment as relevant or irrelevant and supported or contradicts."""
         if not retrieval_used:
             return {
                 'relevance': ReflectionTokens.NO_RETRIEVE,

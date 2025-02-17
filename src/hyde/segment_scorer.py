@@ -1,4 +1,5 @@
 class SegmentScorer:
+    """Score a segment based on its relevance and support."""
     def __init__(self):
         self.weights = {
             "relevance": 0.3,
@@ -6,6 +7,7 @@ class SegmentScorer:
         }
     
     def score_segment(self, segment, critique_tokens):
+        """Score a segment based on its relevance and support."""
         relevance_score = 1.0 if critique_tokens.get('relevance') == ReflectionTokens.RELEVANT else 0.0
         
         support_scores = {
@@ -21,6 +23,7 @@ class SegmentScorer:
 
 
 class ReflectionTokens:
+    """Tokens for reflection."""
     RETRIEVE = "<retrieve>"
     NO_RETRIEVE = "<no_retrieve>"
     RELEVANT = "<relevant>"

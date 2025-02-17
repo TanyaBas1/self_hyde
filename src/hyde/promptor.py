@@ -39,11 +39,13 @@ Passage:"""
 
 
 class Promptor:
+    """Generate a prompt for the query."""
     def __init__(self, task: str, language: str = 'en'):
         self.task = task
         self.language = language
     
     def build_prompt(self, query: str):
+        """Generate a prompt for the query."""
         if self.task == 'web search':
             return WEB_SEARCH.format(query)
         elif self.task == 'scifact':

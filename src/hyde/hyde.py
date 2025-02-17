@@ -5,8 +5,10 @@ from hyde.segment_scorer import ReflectionTokens
 class HyDE:
     def __init__(self, promptor, generator, encoder, searcher):
         """
-        encoder: Any class with encode() method that returns embeddings
-        searcher: Any class with search() method that takes vector and returns hits
+        encoder: a class with encode() method that returns embeddings
+        searcher: a class with search() method that takes vector and returns hits
+        promptor: a class with build_prompt() method that takes query and returns prompt
+        generator: a class with generate() method that takes prompt and returns an answer 
         """
         self.promptor = promptor
         self.generator = generator
@@ -14,14 +16,17 @@ class HyDE:
         self.searcher = searcher
     
     def prompt(self, query):
+        """Generate a prompt for the query."""
         return self.promptor.build_prompt(query)
 
     def generate(self, query):
+        """Generate hypothesis documents."""
         prompt = self.promptor.build_prompt(query)
         hypothesis_documents = self.generator.generate(prompt)
         return hypothesis_documents
     
     def encode(self, query, hypothesis_documents):
+        """Encode query and hypothesis documents into a vector."""
         all_emb_c = []
         for c in [query] + hypothesis_documents:
             c_emb = self.encoder.encode(c)
@@ -32,11 +37,13 @@ class HyDE:
         return hyde_vector
     
     def search(self, hyde_vector, k=10):
+        """Search for the most relevant documents."""
         hits = self.searcher.search(hyde_vector, k=k)
         return hits
     
 
     def e2e_search(self, query, k=10):
+        """End-to-end search process."""
         prompt = self.promptor.build_prompt(query)
         hypothesis_documents = self.generator.generate(prompt)
         hyde_vector = self.encode(query, hypothesis_documents)
@@ -45,6 +52,7 @@ class HyDE:
 
 
 class SelfRAGHyDE(HyDE):
+    """Self-HyDE: Self RAG framework on top of HyDE."""
     def __init__(self, promptor, generator, encoder, searcher):
         super().__init__(promptor, generator, encoder, searcher)
 
@@ -91,45 +99,44 @@ class SelfRAGHyDE(HyDE):
 
     def e2e_search(self, query, k=10):
         """End-to-end search process with self-reflection"""
-        # Generate hypothesis documents with retrieval decision
         hypothesis_documents = self.generate(query)
         
-        # If no retrieval needed
+        # if no retrieval needed
         if not hypothesis_documents:
             final_response, critique = self.generator.generate_with_reflection(query)
             return final_response, critique, []
         
-        # Encode and search
+        # encode and search
         hyde_vector = self.encode(query, hypothesis_documents)
         hits = self.search(hyde_vector, k=k)
         
-        # Get retrieved documents
+        # get retrieved documents
         retrieved_docs = [self.searcher.documents[hit.docid] for hit in hits]
         
-        # Generate final response with reflection
+        # generate final response 
         final_response, critique = self.generate_response(query, retrieved_docs)
         
         return final_response, critique, hits
 
     def get_intermediate_results(self, query, k=10):
-        """Get results from each step for analysis"""
+        """Get results from each step for debugging and analysis"""
         results = {}
         
-        # Step 1: Prompt
+        # prompt
         results['prompt'] = self.prompt(query)
         
-        # Step 2: Generate hypothesis
+        # generate hypothesis
         results['hypothesis_documents'] = self.generate(query)
         
-        # Step 3: Encode
+        # encode
         hyde_vector = self.encode(query, results['hypothesis_documents'])
         results['hyde_vector'] = hyde_vector
         
-        # Step 4: Search
+        # search
         hits = self.search(hyde_vector, k=k) if hyde_vector is not None else []
         results['hits'] = hits
         
-        # Step 5: Generate final response
+        # generate final response
         retrieved_docs = [self.searcher.documents[hit.docid] for hit in hits] if hits else []
         response, critique = self.generate_response(query, retrieved_docs)
         results['final_response'] = response
